@@ -759,6 +759,13 @@ set(CMAKE_REQUIRED_FLAGS "-Werror")
 check_c_source_compiles("
         __attribute__((__constructor__))
         static void my_constructor_func(void) { return; }
+        /*
+         * CompCert 3.12 silently ignores unsupported attributes
+         * if the function appears to be unused. It doesn't consider
+         * that the unknown attribute might make the function used.
+         */
+        void call_func(void);
+        void call_func(void) { my_constructor_func(); }
         int main(void) { return 0; }
     "
     HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR)
@@ -791,15 +798,22 @@ if(ALLOW_ATTR_IFUNC)
             static void (*resolve_func(void)) (void) { return func; }
             void func_ifunc(void)
                     __attribute__((__ifunc__(\"resolve_func\")));
-            int main(void) { return 0; }
             /*
+             * CompCert 3.12 silently ignores unsupported attributes
+             * if the function appears to be unused. It doesn't consider
+             * that the unknown attribute might make the function used.
+             *
              * 'clang -Wall' incorrectly warns that resolve_func is
              * unused (-Wunused-function). Correct assembly output is
              * still produced. This problem exists at least in Clang
-             * versions 4 to 17. The following silences the bogus warning:
+             * versions 4 to 17.
+             *
+             * The following make CompCert diagnose the unsupported
+             * attribute and silences the bogus Clang warning:
              */
-            void make_clang_quiet(void);
-            void make_clang_quiet(void) { resolve_func()(); }
+            void call_funcs(void);
+            void call_funcs(void) { resolve_func()(); func_ifunc(); }
+            int main(void) { return 0; }
         "
         HAVE_FUNC_ATTRIBUTE_IFUNC)
     cmake_pop_check_state()
