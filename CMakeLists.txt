@@ -862,10 +862,30 @@ if(HAVE_IMMINTRIN_H)
     tuklib_add_definition_if(liblzma HAVE_USABLE_CLMUL)
 endif()
 
-# Support -fvisiblity=hidden when building shared liblzma.
-# These lines do nothing on Windows (even under Cygwin).
-# HAVE_VISIBILITY should always be defined to 0 or 1.
-if(BUILD_SHARED_LIBS)
+# Symbol visibility support:
+#
+# The C_VISIBILITY_PRESET property takes care of adding the compiler
+# option -fvisibility=hidden (or equivalent) if and only if it is supported.
+#
+# HAVE_VISIBILITY indicates if __attribute__((__visibility__("default")))
+# is supported. HAVE_VISIBILITY is ignored on Windows and Cygwin in
+# the C code so we don't need to handle that here. HAVE_VISIBILITY
+# should always be defined to 0 or 1.
+#
+# CMake's GenerateExportHeader module is too fancy since liblzma already
+# has the necessary macros. Instead, check CMake's internal variable
+# CMAKE_C_COMPILE_OPTIONS_VISIBILITY (it's the C-specific variant of
+# CMAKE_<LANG>_COMPILE_OPTIONS_VISIBILITY) which contains the string or
+# substring "-fvisibility=" when that compiler option is supported (due to
+# the possibility of substring, we use MATCHES instead of STREQUAL). It's
+# empty or unset when visibility isn't supported.
+#
+# NOTE: CMake 3.27 doesn't support other visibility mechanisms. For example,
+# SolarisStudio ("SunPro") has the option -xldscope=hidden and uses __global
+# instead of GNU C's __attribute__ to mark exported symbols. Autotools-based
+# build doesn't support -xldscope=hidden either.
+if(BUILD_SHARED_LIBS
+        AND CMAKE_C_COMPILE_OPTIONS_VISIBILITY MATCHES "-fvisibility=")
     set_target_properties(liblzma PROPERTIES C_VISIBILITY_PRESET hidden)
     target_compile_definitions(liblzma PRIVATE HAVE_VISIBILITY=1)
 else()
