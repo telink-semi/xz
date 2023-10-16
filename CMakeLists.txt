@@ -53,6 +53,7 @@ include(CheckSymbolExists)
 include(CheckStructHasMember)
 include(CheckCSourceCompiles)
 include(cmake/tuklib_integer.cmake)
+include(cmake/tuklib_gnu_c_attributes.cmake)
 include(cmake/tuklib_cpucores.cmake)
 include(cmake/tuklib_physmem.cmake)
 include(cmake/tuklib_progname.cmake)
@@ -750,17 +751,7 @@ if(NOT TUKLIB_CPUCORES_FOUND OR NOT TUKLIB_PHYSMEM_FOUND)
 endif()
 
 # Check for __attribute__((__constructor__)) support.
-# This needs -Werror because some compilers just warn
-# about this being unsupported.
-cmake_push_check_state()
-set(CMAKE_REQUIRED_FLAGS "-Werror")
-check_c_source_compiles("
-        __attribute__((__constructor__))
-        static void my_constructor_func(void) { return; }
-        int main(void) { return 0; }
-    "
-    HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR)
-cmake_pop_check_state()
+tuklib_check_func_attribute_constructor(HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR)
 tuklib_add_definition_if(liblzma HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR)
 
 # The Win95 threading lacks a thread-safe one-time initialization function.
@@ -782,25 +773,7 @@ option(ALLOW_ATTR_IFUNC "Allow use of __attribute__((__ifunc__())) if \
 supported by the system" ON)
 
 if(ALLOW_ATTR_IFUNC)
-    cmake_push_check_state()
-    set(CMAKE_REQUIRED_FLAGS "-Werror")
-    check_c_source_compiles("
-            static void func(void) { return; }
-            static void (*resolve_func(void)) (void) { return func; }
-            void func_ifunc(void)
-                    __attribute__((__ifunc__(\"resolve_func\")));
-            int main(void) { return 0; }
-            /*
-             * 'clang -Wall' incorrectly warns that resolve_func is
-             * unused (-Wunused-function). Correct assembly output is
-             * still produced. This problem exists at least in Clang
-             * versions 4 to 17. The following silences the bogus warning:
-             */
-            void make_clang_quiet(void);
-            void make_clang_quiet(void) { resolve_func()(); }
-        "
-        HAVE_FUNC_ATTRIBUTE_IFUNC)
-    cmake_pop_check_state()
+    tuklib_check_func_attribute_ifunc(HAVE_FUNC_ATTRIBUTE_IFUNC)
     tuklib_add_definition_if(liblzma HAVE_FUNC_ATTRIBUTE_IFUNC)
 endif()
 
