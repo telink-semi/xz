@@ -1,5 +1,9 @@
 # ===========================================================================
 #  https://www.gnu.org/software/autoconf-archive/ax_gcc_func_attribute.html
+#
+#  NOTE: This is a modified version! This has a fix for the grep pattern
+#  to make it detect unsupported attributes with GCC < 4.6, Clang >= 3.5,
+#  ICC, Solaris Studio, XL C, and CompCert.
 # ===========================================================================
 #
 # SYNOPSIS
@@ -68,6 +72,38 @@
 #   Unsupported function attributes will be tested with a prototype
 #   returning an int and not accepting any arguments and the result of the
 #   check might be wrong or meaningless so use with care.
+#
+#   The following are known to only warn about unsupported attributes:
+#   GCC, Clang/LLVM and Clang-based compilers, Intel C Compiler Classic (ICC),
+#   Oracle Solaris Studio, IBM XL C, and CompCert. Examples:
+#
+#       GCC <= 4.5.3:
+#           warning: 'foobar' attribute directive ignored
+#
+#       GCC >= 4.6:
+#           warning: 'foobar' attribute directive ignored [-Wattributes]
+#
+#       Clang < 3.5:
+#           warning: unknown attribute 'foobar' ignored [-Wattributes]
+#
+#       Clang >= 3.5, CompCert:
+#           warning: unknown attribute 'foobar' ignored [-Wunknown-attributes]
+#
+#       ICC:
+#           warning #1292: unknown attribute "foobar"
+#
+#       Solaris Studio:
+#           warning:  attribute "foobar" is unknown, ignored
+#
+#       XL C message might not contain "warning" but might contain
+#       "WARNING" (z/OS) or "(W)" (AIX). Documentation lists many
+#       attribute-related messages but they all contain the strings
+#       "Attribute" or "attribute" and "ignored". For example:
+#           Attribute "foobar" is not supported and is ignored.
+#
+#   The regex ' [Aa]ttribute .* ignored' matches all the above except
+#   ICC. It can be matched with ': unknown attribute' which happens to
+#   match Clang too.
 #
 # LICENSE
 #
@@ -225,10 +261,11 @@ AC_DEFUN([AX_GCC_FUNC_ATTRIBUTE], [
                 ]
             )], [])
             ],
-            dnl GCC doesn't exit with an error if an unknown attribute is
-            dnl provided but only outputs a warning, so accept the attribute
-            dnl only if no warning were issued.
-            [AS_IF([grep -- -Wattributes conftest.err],
+            dnl Some compilers don't exit with an error if an unknown
+            dnl attribute is provided. They only output a warning, so accept
+            dnl the attribute only if no attribute-related warnings were issued.
+            [AS_IF([[grep ' [Aa]ttribute .* ignored' conftest.err >/dev/null \
+                    || grep ': unknown attribute' conftest.err >/dev/null]],
                 [AS_VAR_SET([ac_var], [no])],
                 [AS_VAR_SET([ac_var], [yes])])],
             [AS_VAR_SET([ac_var], [no])])
