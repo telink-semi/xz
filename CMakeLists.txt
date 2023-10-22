@@ -829,6 +829,10 @@ calculation if supported by the system" ON)
     endif()
 endif()
 
+# Check for __attribute__((__always_inline__)) support.
+tuklib_check_func_attribute_always_inline(HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE)
+tuklib_add_definition_if(liblzma HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE)
+
 # Symbol visibility support:
 #
 # The C_VISIBILITY_PRESET property takes care of adding the compiler

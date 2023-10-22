@@ -844,6 +844,11 @@ AC_ARG_ENABLE([ifunc], [AS_HELP_STRING([--disable-ifunc],
 	[], [enable_ifunc=yes])
 AS_IF([test "x$enable_ifunc" = xyes], [AX_GCC_FUNC_ATTRIBUTE([ifunc])])
 
+# GCC >= 3.2 and Clang support the attribute always_inline but a few other
+# compilers support it too. So it's better to check for the support here
+# instead of just checking if __GNUC__ or __clang__ is defined.
+AX_GCC_FUNC_ATTRIBUTE([always_inline])
+
 
 ###############################################################################
 # Checks for library functions.

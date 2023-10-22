@@ -39,6 +39,14 @@ function(tuklib_check_attribute CODE RESULT)
                                        ": unknown attribute")
 endfunction()
 
+function(tuklib_check_func_attribute_always_inline RESULT)
+    tuklib_check_attribute("
+            __attribute__((__always_inline__))
+            static inline int my_inline_func(int x) { return x + 1; }
+            void my_func(void) { return my_inline_func(123); }
+        " "${RESULT}")
+endfunction()
+
 function(tuklib_check_func_attribute_constructor RESULT)
     tuklib_check_attribute("
             __attribute__((__constructor__))
