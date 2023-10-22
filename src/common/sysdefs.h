@@ -190,6 +190,16 @@ typedef unsigned char _Bool;
 #	define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 #endif
 
+// With MSVC, __forceinline can be used instead of inline.
+// Using both keywords results in a warning.
+#if defined(HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE)
+#	define lzma_always_inline inline __attribute__((__always_inline__))
+#elif defined(_MSC_VER)
+#	define lzma_always_inline __forceinline
+#else
+#	define lzma_always_inline inline
+#endif
+
 #if defined(__GNUC__) \
 		&& ((__GNUC__ == 4 && __GNUC_MINOR__ >= 3) || __GNUC__ > 4)
 #	define lzma_attr_alloc_size(x) __attribute__((__alloc_size__(x)))
