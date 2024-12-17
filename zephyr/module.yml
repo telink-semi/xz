@@ -1,0 +1,4 @@
+name: lzma
+build:
+  cmake: ./zephyr/
+  kconfig: ./zephyr/Kconfig
