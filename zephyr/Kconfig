@@ -3,3 +3,9 @@
 
 config ZEPHYR_LZMA_MODULE
 	bool
+
+config LZMA
+	bool "LZMA data compression and decompression"
+	help
+	  This option enables lzma compression & decompression library
+	  support.
