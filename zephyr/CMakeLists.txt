@@ -29,6 +29,8 @@ if(CONFIG_LZMA)
     ${LZMA_DIR}/src/liblzma/delta
   )
 
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os")
+
   target_compile_definitions(liblzma PRIVATE HAVE_CONFIG_H)
   target_link_libraries(zephyr PRIVATE liblzma)
 
